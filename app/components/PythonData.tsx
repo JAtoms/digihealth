@@ -1,7 +1,7 @@
 // components/MyComponent.js
 import React, {useEffect, useState} from 'react';
 
-const PythonData = ({csvData}) => {
+const PythonData = () => {
 
     // const [data, setData] = useState([]);
     // const [loading, setLoading] = useState(true);
@@ -28,6 +28,8 @@ const PythonData = ({csvData}) => {
     // useEffect(() => {
     //     handleRunScript();
     // }, []);
+
+    console.log('sdefefef')
 
     return (
         <div>

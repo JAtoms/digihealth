@@ -1,98 +1,48 @@
-import base64
-
-from flask import Flask, request, jsonify
-import numpy as np
-from flask_cors import CORS
-import pandas as pd
+import json
 from io import StringIO
+
+import numpy as np
+import pandas as pd
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 
-@app.route('/post_data', methods=['POST', 'OPTIONS'])
-def post_data():
-    csv_dict = {
-        "basal": [],
-        "bolus": [],
-        "insulin": [],
-        "alarms": [],
-        "bg": [],
-        "cgm": []
-    }
+def process_to_csv(data):
+    csv_data = data['csvData']
+    df_list = []
 
+    for key, value in csv_data.items():
+        for file in value:
+            csv_content = "\n".join(file.split("\r\n")[1:])
+            df = pd.read_csv(StringIO(csv_content))
+            df_list.append(df)
+        if not (df_list):
+            continue
+        combined_df = pd.concat(df_list, ignore_index=True)
+        csv_data[key] = combined_df
+        df_list = []
+    return csv_data
+
+
+@app.route('/post_data', methods=['POST', 'GET', 'OPTIONS'])
+def post_data():
     if request.method == 'OPTIONS':
         # Respond to the preflight request with 200 OK
         response = jsonify({'status': 'ok'})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+        response.headers.add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH")
         response.headers.add("Access-Control-Allow-Headers", "Content-Type")
         return response, 200
 
     # Your POST logic here
     data = request.json
 
-    print(data)
-    # Convert each CSV string in the list to a DataFrame and store as CSV in csv_dict
+    process_to_csv(data)
 
-    # dataframes = {}
-    # for key, value in data.items():
-    #     if value:  # Check if there are any entries for the key
-    #         # Create a list to hold individual DataFrames
-    #         df_list = []
-    #         for csv_content in value:
-    #             df = pd.read_csv(StringIO(csv_content))
-    #             df_list.append(df)
-    #         # Concatenate all DataFrames for the current key into a single DataFrame
-    #         dataframes[key] = pd.concat(df_list, ignore_index=True) if df_list else pd.DataFrame()
-    #     else:
-    #         dataframes[key] = pd.DataFrame()  # Create an empty DataFrame for keys with no data
-    # return dataframes
-    #
-    # # Convert all csvData into DataFrames
-    # csv_data = data['csvData']
-    # dataframes = convert_to_dataframes(csv_data)
-    #
-    # print(csv_dict)
-    return jsonify({"message": "Data processed and stored in csv_dict"}), 200
-
-
-# def post_data():
-#     # Define the expected keys for the uploaded files
-#     expected_keys = ['basal', 'bolus', 'insulin', 'alarms', 'bg', 'cgm']
-#     csv_dict = {}
-#
-#     # Ensure the request contains JSON data
-#     if not request.is_json:
-#         return jsonify({'error': 'Invalid content type; expecting JSON'}), 400
-#
-#     try:
-#         # Get the csvData payload from the JSON request
-#         data = request.json.get('csvData', {})
-#
-#         for key in expected_keys:
-#             # Initialize an empty list in csv_dict for each key
-#             csv_dict[key] = []
-#
-#             # Check if the key exists in the payload data
-#             if key in data:
-#                 for file_data in data[key]:
-#                     file_name = file_data['name']
-#                     file_content_base64 = file_data['content']
-#
-#                     # Decode the base64-encoded content
-#                     file_content = base64.b64decode(file_content_base64).decode("utf-8")
-#
-#                     # Convert to DataFrame and store in csv_dict
-#                     df = pd.read_csv(StringIO(file_content), skiprows=1)
-#                     csv_dict[key].append(df.to_dict(orient='records'))  # Store as a list of dictionaries
-#
-#         data = jsonify(csv_dict)
-#         # process_csv(data)
-#         return jsonify(data)  # Return the dictionary of DataFrames
-#
-#     except Exception as e:
-#         return jsonify({'error': f'Error processing files: {str(e)}'}), 500
+    return '200'
 
 
 def process_csv(csv_dict):
