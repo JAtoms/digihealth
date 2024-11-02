@@ -1,38 +1,32 @@
-// components/MyComponent.js
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
+import { Loader2 } from "lucide-react";
 
-const PythonData = ({csvData}) => {
+interface PythonDataProps {
+    data: {
+        basal: Record<string, unknown>[];
+        bolus: Record<string, unknown>[];
+        insulin: Record<string, unknown>[];
+        alarms: Record<string, unknown>[];
+        bg: Record<string, unknown>[];
+        cgm: Record<string, unknown>[];
+    };
+}
 
-    // const [data, setData] = useState([]);
-    // const [loading, setLoading] = useState(true);
-    // const [error, setError] = useState(null);
-    //
-    // const handleRunScript = async () => {
-    //     console.log('Converting data ...')
-    //     const response = await fetch('http://localhost:5000/process-data', {
-    //         method: 'POST',
-    //         headers: {'Content-Type': 'application/json'},
-    //         body: JSON.stringify({csvData: csvData}),
-    //     });
-    //
-    //     if (response.ok) {
-    //         const result = await response.json();
-    //         console.log('Conversion successful ...')
-    //         setData(result);
-    //     } else {
-    //         console.error('Conversion failed!');
-    //         setLoading(false);
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     handleRunScript();
-    // }, []);
-
+const PythonData: React.FC<PythonDataProps> = ({ data }) => {
     return (
         <div>
-            <h1>Data from Flask API</h1>
-            {/*{imageUrl && <img src={imageUrl} alt="Generated Plot"/>}*/}
+            <h2 className="text-xl font-bold mb-4">Processed Data</h2>
+            {Object.entries(data).map(([key, value]) => (
+                <div key={key} className="mb-4">
+                    <h3 className="font-semibold">{key}</h3>
+                    <pre className="bg-gray-100 p-2 rounded">
+                        {JSON.stringify(value, null, 2)}
+                    </pre>
+                </div>
+            ))}
         </div>
     );
 };
